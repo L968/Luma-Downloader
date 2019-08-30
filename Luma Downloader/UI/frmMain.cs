@@ -279,27 +279,38 @@ namespace Luma_Downloader.UI
         /// <param name="e"></param>
         private void lstDownloadLog_DrawItem(object sender, DrawItemEventArgs e)
         {
-            Graphics g = e.Graphics;
-            Dictionary<string, object> props = lstDownloadLog.Items[e.Index] as Dictionary<string, object>;
-            SolidBrush backgroundBrush = new SolidBrush(props.ContainsKey("BackColor") ? (Color)props["BackColor"] : e.BackColor);
-            SolidBrush foregroundBrush = new SolidBrush(props.ContainsKey("ForeColor") ? (Color)props["ForeColor"] : e.ForeColor);
-            Font textFont = props.ContainsKey("Font") ? (Font)props["Font"] : e.Font;
-            string text = props.ContainsKey("Text") ? (string)props["Text"] : string.Empty;
-            RectangleF rectangle = new RectangleF(new PointF(e.Bounds.X, e.Bounds.Y), new SizeF(e.Bounds.Width, g.MeasureString(text, textFont).Height));
+            try
+            {
+                Graphics g = e.Graphics;
+                Dictionary<string, object> props = lstDownloadLog.Items[e.Index] as Dictionary<string, object>;
+                SolidBrush backgroundBrush = new SolidBrush(props.ContainsKey("BackColor") ? (Color)props["BackColor"] : e.BackColor);
+                SolidBrush foregroundBrush = new SolidBrush(props.ContainsKey("ForeColor") ? (Color)props["ForeColor"] : e.ForeColor);
+                Font textFont = props.ContainsKey("Font") ? (Font)props["Font"] : e.Font;
+                string text = props.ContainsKey("Text") ? (string)props["Text"] : string.Empty;
+                RectangleF rectangle = new RectangleF(new PointF(e.Bounds.X, e.Bounds.Y), new SizeF(e.Bounds.Width, g.MeasureString(text, textFont).Height));
 
-            g.FillRectangle(backgroundBrush, rectangle);
-            g.DrawString(text, textFont, foregroundBrush, rectangle);
+                g.FillRectangle(backgroundBrush, rectangle);
+                g.DrawString(text, textFont, foregroundBrush, rectangle);
 
-            backgroundBrush.Dispose();
-            foregroundBrush.Dispose();
-            g.Dispose();
+                backgroundBrush.Dispose();
+                foregroundBrush.Dispose();
+                g.Dispose();
+            }
+            catch (Exception)
+            {
+
+            }
+            
         }
 
         private void lstDownloadLog_DoubleClick(object sender, EventArgs e)
         {
-            var selectedLine = lstDownloadLog.Items[lstDownloadLog.SelectedIndex] as Dictionary<string, object>;
-            var lineMessage = selectedLine["Text"] as string;
-            MessageBox.Show(lineMessage);
+            if (lstDownloadLog.SelectedIndex != -1)
+            {
+                var selectedLine = lstDownloadLog.Items[lstDownloadLog.SelectedIndex] as Dictionary<string, object>;
+                var lineMessage = selectedLine["Text"] as string;
+                MessageBox.Show(lineMessage);
+            }
         }
         
     }

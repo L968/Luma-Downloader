@@ -34,9 +34,17 @@ namespace Luma_Downloader
 
             // Get file extension based on stream's container
             var ext = streamInfo.Container.GetFileExtension();
+            var filePath = $@"{DestinationFolder}\{Title}.{ext}";
 
             // Download stream to file
-            await client.DownloadMediaStreamAsync(streamInfo, $@"{DestinationFolder}\{Title}.{ext}", progress, ct);
+            await client.DownloadMediaStreamAsync(streamInfo, filePath, progress, ct);
+            //ConvertToMp3(filePath);
+        }
+
+        private void ConvertToMp3(string filePath)
+        {
+            var converter = new NReco.VideoConverter.FFMpegConverter();
+            converter.ConvertMedia(filePath, filePath.Replace(".mp4", ".mp3"), "mp3");
         }
     }
 }

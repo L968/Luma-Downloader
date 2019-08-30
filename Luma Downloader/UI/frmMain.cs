@@ -22,43 +22,10 @@ namespace Luma_Downloader.UI
         {
             InitializeComponent();
             lblProgress.Text = null;
-            txtDestinationFolder.Text = Settings.Default.DestinationFolder == "" ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Settings.Default.DestinationFolder;
             txtUrl.Select();
         }
 
         #region Buttons
-        private void btnBrowse_Click(object sender, EventArgs e)
-        {
-            var browser = new FolderSelectDialog("Select Destination Folder", txtDestinationFolder.Text);
-            if (browser.ShowDialog(IntPtr.Zero))
-            {
-                txtDestinationFolder.Text = browser.FileName;
-
-                // Saving path to settings
-                Settings.Default.DestinationFolder = browser.FileName;
-                Settings.Default.Save();
-            }
-        }
-
-        private void btnOpenFolder_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!string.IsNullOrEmpty(txtDestinationFolder.Text))
-                {
-                    Process.Start(txtDestinationFolder.Text);
-                }
-                else
-                {
-                    AddLogMessage("Select a folder!", Message.Warning);
-                }
-            }
-            catch (Exception)
-            {
-                AddLogMessage("Not a valid path!", Message.Warning);
-            }
-        }
-
         private async void btnDownload_Click(object sender, EventArgs e)
         {
             var st = new Stopwatch();
@@ -66,58 +33,66 @@ namespace Luma_Downloader.UI
             try
             {
                 ValidateBeforeDownload();
+                var urlId = GetUrlId();
+                var destinationFolder = OpenSelectFolderDialog();
                 UpdateUIBeforeDownload();
                 st.Start();
 
                 var progress = new Progress<double>(p => prgDownloadProgress.Value = Convert.ToInt32(p * 100));
                 _cts = new CancellationTokenSource();
 
+                AddLogMessage("Downloading in: " + destinationFolder);
+
                 if (rdDownloadPlaylist.Checked)
                 {
-                    var playlistId = YoutubeClient.ParsePlaylistId(txtUrl.Text);
-                    await DownloadPlaylist(playlistId, txtDestinationFolder.Text, progress, _cts.Token);
+                    await DownloadPlaylist(urlId, destinationFolder, progress, _cts.Token);
                 }
                 else if (rdDownloadVideo.Checked)
                 {
-                    var videoId = YoutubeClient.ParseVideoId(txtUrl.Text);
-                    var videoTitle = await Util.GetFilteredVideoTitle(videoId);
-                    var video = new Video(videoId, txtDestinationFolder.Text, videoTitle);
+                    var videoTitle = await Util.GetFilteredVideoTitle(urlId);
+                    var video = new Video(urlId, destinationFolder, videoTitle);
 
                     await DownloadVideo(video, progress, _cts.Token);
                 }
 
                 st.Stop();
-                AddLogMessage($"Download completed in {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", Message.Success);
+                AddLogMessage($"Download completed in {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", MessageType.Success);
             }
             catch (FormatException ex)
             {
                 if (ex.Message.StartsWith("Could not parse playlist"))
                 {
-                    AddLogMessage("Invalid youtube playlist URL!", Message.Warning);
-                    return;
+                    AddLogMessage("Invalid youtube playlist URL!", MessageType.Warning);
+                }
+                else if (ex.Message.StartsWith("Could not parse video"))
+                {
+                    AddLogMessage("Invalid youtube video URL!", MessageType.Warning);
                 }
                 else
                 {
-                    AddLogMessage("Invalid youtube video URL!", Message.Warning);
-                    return;
+                    AddLogMessage(ex.Message, MessageType.Warning);
                 }
+
+                return;
             }
             catch (UnauthorizedAccessException)
             {
-                AddLogMessage("Access to the path is denied! Try selecting another folder...", Message.Warning);
+                AddLogMessage("Access to the path is denied! Try selecting another folder...", MessageType.Warning);
                 return;
             }
             catch (ApplicationException ex)
             {
-                AddLogMessage(ex.Message, Message.Warning);
+                AddLogMessage(ex.Message, MessageType.Warning);
                 return;
             }
             catch (OperationCanceledException)
             {
-                st.Stop();
-                AddLogMessage($"Operation cancelled after {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", Message.Warning);
-                prgDownloadProgress.Value = 0;
+                AddLogMessage($"Operation cancelled after {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", MessageType.Warning);
                 return;
+            }
+            catch(Exception ex)
+            {
+                AddLogMessage("Error: " + ex.Message, MessageType.Warning);
             }
             finally
             {
@@ -127,12 +102,19 @@ namespace Luma_Downloader.UI
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            _cts.Cancel();
+            try
+            {
+                _cts.Cancel();
+            }
+            catch (Exception ex)
+            {
+                AddLogMessage("Error: " + ex.Message, MessageType.Warning);
+            }
+            
         }
 
         private void btnClear_Click(object sender, EventArgs e)
         {
-            txtUrl.Text = null;
             lstDownloadLog.Items.Clear();
         }
         #endregion
@@ -162,7 +144,7 @@ namespace Luma_Downloader.UI
                     }
                     else
                     {
-                        AddLogMessage($"Already downloaded: {video.Title}", Message.Warning);
+                        AddLogMessage($"Already downloaded: {video.Title}", MessageType.Warning);
                     }
                 }
                 catch (OperationCanceledException)
@@ -171,7 +153,7 @@ namespace Luma_Downloader.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLogMessage($"ERROR on downloading this video: {ex.Message}", Message.Warning);
+                    AddLogMessage($"ERROR on downloading this video: {ex.Message}", MessageType.Warning);
                 }
                 lblProgress.Text = $"Total: {i}/{totalVideosInPlaylist}";
                 i++;
@@ -184,7 +166,7 @@ namespace Luma_Downloader.UI
 
             await video.Download(progress, ct);
 
-            AddLogMessage($"Downloaded!", Message.Success);
+            AddLogMessage($"Downloaded!", MessageType.Success);
 
             prgDownloadProgress.Value = 0;
         }
@@ -195,19 +177,9 @@ namespace Luma_Downloader.UI
         /// </summary>
         private void ValidateBeforeDownload()
         {
-            if (string.IsNullOrWhiteSpace(txtDestinationFolder.Text))
-            {
-                throw new ApplicationException("Choose the download destination folder!");
-            }
-
-            if (!Directory.Exists(txtDestinationFolder.Text))
-            {
-                throw new ApplicationException("Not a existing/valid folder path!");
-            }
-
             if (string.IsNullOrWhiteSpace(txtUrl.Text))
             {
-                throw new ApplicationException("Select the playlist link!");
+                throw new ApplicationException("Select the playlist/video url!");
             }
         }
 
@@ -247,17 +219,17 @@ namespace Luma_Downloader.UI
         /// </summary>
         /// <param name="message">The message to be shown</param>
         /// <param name="messageType">The message type</param>
-        private void AddLogMessage(string message, Message messageType)
+        private void AddLogMessage(string message, MessageType messageType)
         {
             switch (messageType)
             {
-                case Message.Success:
+                case MessageType.Success:
                     lstDownloadLog.Items.Add(new Dictionary<string, object> {
                         { "Text", message},
                         { "ForeColor", Color.Green}
                     });
                     break;
-                case Message.Warning:
+                case MessageType.Warning:
                     lstDownloadLog.Items.Add(new Dictionary<string, object> {
                         { "Text", message},
                         { "ForeColor", Color.Red}
@@ -313,9 +285,49 @@ namespace Luma_Downloader.UI
             }
         }
         
+        private string OpenSelectFolderDialog()
+        {
+            var folder = string.IsNullOrWhiteSpace(Settings.Default.DestinationFolder) ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Settings.Default.DestinationFolder;
+            var browser = new FolderSelectDialog("Select Destination Folder", folder);
+
+            if (browser.ShowDialog(IntPtr.Zero))
+            {
+                SaveDestinationFolder(browser.FileName);
+                return browser.FileName;
+            }
+            else
+            {
+                throw new ApplicationException("");
+            }
+
+        }
+
+        private string GetUrlId()
+        {
+            if (rdDownloadPlaylist.Checked)
+            {
+                return YoutubeClient.ParsePlaylistId(txtUrl.Text);
+            }
+            else if (rdDownloadVideo.Checked)
+            {
+                return YoutubeClient.ParseVideoId(txtUrl.Text);
+            }
+            else
+            {
+                throw new ApplicationException("");
+            }
+
+        }
+
+        private void SaveDestinationFolder(string destinationFolder)
+        {
+            Settings.Default.DestinationFolder = destinationFolder;
+            Settings.Default.Save();
+        }
+
     }
 
-    public enum Message
+    public enum MessageType
     {
         Success,
         Warning

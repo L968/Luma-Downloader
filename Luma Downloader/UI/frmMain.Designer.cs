@@ -71,6 +71,7 @@
             // prgDownloadProgress
             // 
             this.prgDownloadProgress.Location = new System.Drawing.Point(12, 280);
+            this.prgDownloadProgress.MarqueeAnimationSpeed = 10;
             this.prgDownloadProgress.Name = "prgDownloadProgress";
             this.prgDownloadProgress.Size = new System.Drawing.Size(571, 23);
             this.prgDownloadProgress.Step = 1;

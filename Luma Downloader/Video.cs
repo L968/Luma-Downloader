@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,13 +39,8 @@ namespace Luma_Downloader
 
             // Download stream to file
             await client.DownloadMediaStreamAsync(streamInfo, filePath, progress, ct);
-            //ConvertToMp3(filePath);
         }
 
-        private void ConvertToMp3(string filePath)
-        {
-            var converter = new NReco.VideoConverter.FFMpegConverter();
-            converter.ConvertMedia(filePath, filePath.Replace(".mp4", ".mp3"), "mp3");
-        }
+
     }
 }

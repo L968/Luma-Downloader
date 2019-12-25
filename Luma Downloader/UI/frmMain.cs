@@ -110,7 +110,7 @@ namespace Luma_Downloader.UI
             {
                 AddLogMessage("Error: " + ex.Message, MessageType.Warning);
             }
-            
+
         }
 
         private void btnClear_Click(object sender, EventArgs e)
@@ -138,13 +138,13 @@ namespace Luma_Downloader.UI
                     var videoTitle = Util.FilterVideoTitle(item.Title);
                     var video = new Video(item.Id, destinationFolder, videoTitle);
 
-                    if (!File.Exists($@"{destinationFolder}\{video.Title}.mp4"))
+                    if (!File.Exists($@"{destinationFolder}\{video.Title}.mp3"))
                     {
                         await DownloadVideo(video, progress, ct);
                     }
                     else
                     {
-                        AddLogMessage($"Already downloaded: {video.Title}", MessageType.Warning);
+                        AddLogMessage($"There's already a .mp3 file with this name: {video.Title}", MessageType.Warning);
                     }
                 }
                 catch (OperationCanceledException)
@@ -161,12 +161,14 @@ namespace Luma_Downloader.UI
         }
 
         private async Task DownloadVideo(Video video, IProgress<double> progress, CancellationToken ct)
-        {    
+        {
             AddLogMessage($"Downloading: {video.Title}");
 
             await video.Download(progress, ct);
 
-            AddLogMessage($"Downloaded!", MessageType.Success);
+            AddLogMessage($"Downloaded successfully!", MessageType.Success);
+
+            await StartConvertingToMp3(video);
 
             prgDownloadProgress.Value = 0;
         }
@@ -272,7 +274,7 @@ namespace Luma_Downloader.UI
             {
 
             }
-            
+
         }
 
         private void lstDownloadLog_DoubleClick(object sender, EventArgs e)
@@ -284,7 +286,7 @@ namespace Luma_Downloader.UI
                 MessageBox.Show(lineMessage);
             }
         }
-        
+
         private string OpenSelectFolderDialog()
         {
             var folder = string.IsNullOrWhiteSpace(Settings.Default.DestinationFolder) ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : Settings.Default.DestinationFolder;
@@ -323,6 +325,29 @@ namespace Luma_Downloader.UI
         {
             Settings.Default.DestinationFolder = destinationFolder;
             Settings.Default.Save();
+        }
+
+        private async Task StartConvertingToMp3(Video video)
+        {
+            AddLogMessage("Converting to mp3...Do not close the application");
+
+            var filePath = $@"{video.DestinationFolder}\{video.Title}.mp4";
+            prgDownloadProgress.Style = ProgressBarStyle.Marquee;
+
+            await ConvertToMp3(filePath);
+
+            AddLogMessage("Converted successfully!", MessageType.Success);
+            prgDownloadProgress.Style = ProgressBarStyle.Blocks;
+        }
+
+        private Task ConvertToMp3(string filePath)
+        {
+            return Task.Factory.StartNew(() =>
+            {
+                var converter = new NReco.VideoConverter.FFMpegConverter();
+                converter.ConvertMedia(filePath, filePath.Replace(".mp4", ".mp3"), "mp3");
+                File.Delete(filePath); // Deletes the old mp4 file
+            });
         }
 
     }

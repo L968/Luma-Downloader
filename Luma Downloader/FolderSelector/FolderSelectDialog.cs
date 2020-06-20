@@ -6,7 +6,7 @@ using System.Windows.Forms;
 // a vista-style dialog.
 // ------------------------------------------------------------------
 
-namespace Luma_Downloader.FolderSelector
+namespace Luma.FolderSelector
 {
     /// <summary>
     /// Wraps System.Windows.Forms.OpenFileDialog to make it present

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Luma_Downloader.FolderSelector
+namespace Luma.FolderSelector
 {
     /// <summary>
     /// This class is from the Front-End for Dosbox and is used to present a 'vista' dialog box to select folders.

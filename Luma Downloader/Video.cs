@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using YoutubeExplode;
 using YoutubeExplode.Videos.Streams;
 
-namespace Luma_Downloader
+namespace Luma
 {
     public class Video
     {

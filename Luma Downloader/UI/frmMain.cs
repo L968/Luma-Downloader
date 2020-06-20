@@ -9,10 +9,10 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using Luma_Downloader.Properties;
-using Luma_Downloader.FolderSelector;
+using Luma.Properties;
+using Luma.FolderSelector;
 
-namespace Luma_Downloader.UI
+namespace Luma.UI
 {
     public partial class frmMain : Form
     {

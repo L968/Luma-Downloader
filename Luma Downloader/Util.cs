@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using YoutubeExplode;
 
-namespace Luma_Downloader
+namespace Luma
 {
     internal static class Util
     {

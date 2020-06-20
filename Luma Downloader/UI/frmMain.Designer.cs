@@ -1,4 +1,4 @@
-﻿namespace Luma_Downloader.UI
+﻿namespace Luma.UI
 {
     partial class frmMain
     {

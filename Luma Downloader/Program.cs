@@ -1,8 +1,8 @@
-﻿using Luma_Downloader.UI;
+﻿using Luma.UI;
 using System;
 using System.Windows.Forms;
 
-namespace Luma_Downloader
+namespace Luma
 {
     static class Program
     {

@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
-using YoutubeExplode;
-using System.Threading.Tasks;
+using Humanizer;
 using System.Linq;
-using System.Collections.Generic;
+using System.Drawing;
+using YoutubeExplode;
 using System.Threading;
 using System.Diagnostics;
-using Humanizer;
+using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using Luma_Downloader.Properties;
 using Luma_Downloader.FolderSelector;
 
@@ -16,7 +16,7 @@ namespace Luma_Downloader.UI
 {
     public partial class frmMain : Form
     {
-        private CancellationTokenSource _cts;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public frmMain()
         {
@@ -28,71 +28,54 @@ namespace Luma_Downloader.UI
         #region Buttons
         private async void btnDownload_Click(object sender, EventArgs e)
         {
-            var st = new Stopwatch();
+            var stopWatch = new Stopwatch();
 
             try
             {
                 ValidateBeforeDownload();
-                var urlId = GetUrlId();
                 var destinationFolder = OpenSelectFolderDialog();
+                var url = txtUrl.Text;
                 UpdateUIBeforeDownload();
-                st.Start();
+                stopWatch.Start();
 
                 var progress = new Progress<double>(p => prgDownloadProgress.Value = Convert.ToInt32(p * 100));
-                _cts = new CancellationTokenSource();
+                _cancellationTokenSource = new CancellationTokenSource();
 
                 AddLogMessage("Downloading in: " + destinationFolder);
 
                 if (rdDownloadPlaylist.Checked)
                 {
-                    await DownloadPlaylist(urlId, destinationFolder, progress, _cts.Token);
+                    await DownloadPlaylist(url, destinationFolder, progress, _cancellationTokenSource.Token);
                 }
                 else if (rdDownloadVideo.Checked)
                 {
-                    var videoTitle = await Util.GetFilteredVideoTitle(urlId);
-                    var video = new Video(urlId, destinationFolder, videoTitle);
+                    var videoTitle = await Util.GetFilteredVideoTitle(url);
+                    var video = new Video(url, destinationFolder, videoTitle);
 
-                    await DownloadVideo(video, progress, _cts.Token);
-                }
-
-                st.Stop();
-                AddLogMessage($"Download completed in {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", MessageType.Success);
-            }
-            catch (FormatException ex)
-            {
-                if (ex.Message.StartsWith("Could not parse playlist"))
-                {
-                    AddLogMessage("Invalid youtube playlist URL!", MessageType.Warning);
-                }
-                else if (ex.Message.StartsWith("Could not parse video"))
-                {
-                    AddLogMessage("Invalid youtube video URL!", MessageType.Warning);
-                }
-                else
-                {
-                    AddLogMessage(ex.Message, MessageType.Warning);
+                    await DownloadVideo(video, progress, _cancellationTokenSource.Token);
                 }
 
-                return;
+                stopWatch.Stop();
+                AddLogMessage($"Download completed in {TimeSpanHumanizeExtensions.Humanize(stopWatch.Elapsed)}!", MessageType.Success);
             }
             catch (UnauthorizedAccessException)
             {
-                AddLogMessage("Access to the path is denied! Try selecting another folder...", MessageType.Warning);
+                AddLogMessage("Access to the path is denied! Try selecting another folder", MessageType.Error);
                 return;
             }
             catch (ApplicationException ex)
             {
-                AddLogMessage(ex.Message, MessageType.Warning);
+                AddLogMessage(ex.Message, MessageType.Error);
                 return;
             }
             catch (OperationCanceledException)
             {
-                AddLogMessage($"Operation cancelled after {TimeSpanHumanizeExtensions.Humanize(st.Elapsed)}!", MessageType.Warning);
+                AddLogMessage($"Operation cancelled after {TimeSpanHumanizeExtensions.Humanize(stopWatch.Elapsed)}!", MessageType.Warning);
                 return;
             }
             catch(Exception ex)
             {
-                AddLogMessage("Error: " + ex.Message, MessageType.Warning);
+                AddLogMessage("Error: " + ex.Message, MessageType.Error);
             }
             finally
             {
@@ -102,15 +85,7 @@ namespace Luma_Downloader.UI
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            try
-            {
-                _cts.Cancel();
-            }
-            catch (Exception ex)
-            {
-                AddLogMessage("Error: " + ex.Message, MessageType.Warning);
-            }
-
+            _cancellationTokenSource.Cancel();
         }
 
         private void btnClear_Click(object sender, EventArgs e)
@@ -120,17 +95,17 @@ namespace Luma_Downloader.UI
         #endregion
 
         #region Downloaders
-        private async Task DownloadPlaylist(string playlistId, string destinationFolder, IProgress<double> progress, CancellationToken ct)
+        private async Task DownloadPlaylist(string playlistUrl, string destinationFolder, IProgress<double> progress, CancellationToken ct)
         {
             var client = new YoutubeClient();
-            var playlist = await client.GetPlaylistAsync(playlistId);
+            var videos = await client.Playlists.GetVideosAsync(playlistUrl);
 
-            var totalVideosInPlaylist = playlist.Videos.Count();
+            var totalVideosInPlaylist = videos.Count();
 
             lblProgress.Text = $"Total: 0/{totalVideosInPlaylist}";
 
             var i = 1;
-            foreach (var item in playlist.Videos)
+            foreach (var item in videos)
             {
                 ct.ThrowIfCancellationRequested();
                 try
@@ -153,7 +128,7 @@ namespace Luma_Downloader.UI
                 }
                 catch (Exception ex)
                 {
-                    AddLogMessage($"ERROR on downloading this video: {ex.Message}", MessageType.Warning);
+                    AddLogMessage($"ERROR on downloading this video: {ex.Message}", MessageType.Error);
                 }
                 lblProgress.Text = $"Total: {i}/{totalVideosInPlaylist}";
                 i++;
@@ -234,6 +209,12 @@ namespace Luma_Downloader.UI
                 case MessageType.Warning:
                     lstDownloadLog.Items.Add(new Dictionary<string, object> {
                         { "Text", message},
+                        { "ForeColor", Color.DarkOrange}
+                    });
+                    break;
+                case MessageType.Error:
+                    lstDownloadLog.Items.Add(new Dictionary<string, object> {
+                        { "Text", message},
                         { "ForeColor", Color.Red}
                     });
                     break;
@@ -272,9 +253,7 @@ namespace Luma_Downloader.UI
             }
             catch (Exception)
             {
-
             }
-
         }
 
         private void lstDownloadLog_DoubleClick(object sender, EventArgs e)
@@ -301,24 +280,6 @@ namespace Luma_Downloader.UI
             {
                 throw new ApplicationException("");
             }
-
-        }
-
-        private string GetUrlId()
-        {
-            if (rdDownloadPlaylist.Checked)
-            {
-                return YoutubeClient.ParsePlaylistId(txtUrl.Text);
-            }
-            else if (rdDownloadVideo.Checked)
-            {
-                return YoutubeClient.ParseVideoId(txtUrl.Text);
-            }
-            else
-            {
-                throw new ApplicationException("");
-            }
-
         }
 
         private void SaveDestinationFolder(string destinationFolder)
@@ -355,6 +316,7 @@ namespace Luma_Downloader.UI
     public enum MessageType
     {
         Success,
-        Warning
+        Warning,
+        Error
     }
 }

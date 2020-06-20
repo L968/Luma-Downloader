@@ -1,22 +1,21 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using YoutubeExplode;
-using YoutubeExplode.Models.MediaStreams;
+using YoutubeExplode.Videos.Streams;
 
 namespace Luma_Downloader
 {
     public class Video
     {
-        public string Id { get; set; }
+        public string Url { get; set; }
         public string DestinationFolder { get; set; }
         public string Title { get; set; }
 
-        public Video(string id, string destinationFolder, string title)
+        public Video(string url, string destinationFolder, string title)
         {
-            Id = id;
+            Url = url;
             DestinationFolder = destinationFolder;
             Title = title;
         }
@@ -25,20 +24,18 @@ namespace Luma_Downloader
         {
             var client = new YoutubeClient();
             // Get metadata for all streams in this video
-            var streamInfoSet = await client.GetVideoMediaStreamInfosAsync(Id);
+            var streamInfoSet = await client.Videos.Streams.GetManifestAsync(Url);
 
             // Select one of the streams, e.g. highest quality muxed stream
             var streamInfo = streamInfoSet
-                            .Audio
-                            .Where(video => video.Container.GetFileExtension().Contains("mp4"))
-                            .First();
+                            .GetAudioOnly()
+                            .Where(video => video.Container == Container.Mp4)
+                            .WithHighestBitrate();
 
-            // Get file extension based on stream's container
-            var ext = streamInfo.Container.GetFileExtension();
-            var filePath = $@"{DestinationFolder}\{Title}.{ext}";
+            var filePath = $@"{DestinationFolder}\{Title}.mp4";
 
             // Download stream to file
-            await client.DownloadMediaStreamAsync(streamInfo, filePath, progress, ct);
+            await client.Videos.Streams.DownloadAsync(streamInfo, filePath, progress, ct);
         }
 
 

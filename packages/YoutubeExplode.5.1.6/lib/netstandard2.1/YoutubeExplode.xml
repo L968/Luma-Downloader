@@ -105,6 +105,12 @@
         <member name="M:YoutubeExplode.Channels.ChannelId.ToString">
             <inheritdoc />
         </member>
+        <member name="M:YoutubeExplode.Channels.ChannelId.TryParse(System.String)">
+            <summary>
+            Attempts to parse the specified string as a channel ID or URL.
+            Returns null in case of failure.
+            </summary>
+        </member>
         <member name="M:YoutubeExplode.Channels.ChannelId.Equals(YoutubeExplode.Channels.ChannelId)">
             <inheritdoc />
         </member>
@@ -134,12 +140,6 @@
             Converts ID to string.
             </summary>
         </member>
-        <member name="M:YoutubeExplode.Channels.ChannelId.TryParse(System.String)">
-            <summary>
-            Attempts to parse the specified string as a channel ID or URL.
-            Returns null in case of failure.
-            </summary>
-        </member>
         <member name="T:YoutubeExplode.Channels.UserName">
             <summary>
             Encapsulates a valid YouTube user name.
@@ -157,6 +157,12 @@
         </member>
         <member name="M:YoutubeExplode.Channels.UserName.ToString">
             <inheritdoc />
+        </member>
+        <member name="M:YoutubeExplode.Channels.UserName.TryParse(System.String)">
+            <summary>
+            Attempts to parse the specified string as a username or URL.
+            Returns null in case of failure.
+            </summary>
         </member>
         <member name="M:YoutubeExplode.Channels.UserName.Equals(YoutubeExplode.Channels.UserName)">
             <inheritdoc />
@@ -185,12 +191,6 @@
         <member name="M:YoutubeExplode.Channels.UserName.op_Implicit(YoutubeExplode.Channels.UserName)~System.String">
             <summary>
             Converts user name to string.
-            </summary>
-        </member>
-        <member name="M:YoutubeExplode.Channels.UserName.TryParse(System.String)">
-            <summary>
-            Attempts to parse the specified string as a username or URL.
-            Returns null in case of failure.
             </summary>
         </member>
         <member name="T:YoutubeExplode.Common.Engagement">
@@ -427,6 +427,12 @@
         <member name="M:YoutubeExplode.Playlists.PlaylistId.ToString">
             <inheritdoc />
         </member>
+        <member name="M:YoutubeExplode.Playlists.PlaylistId.TryParse(System.String)">
+            <summary>
+            Attempts to parse the specified string as a playlist ID or URL.
+            Returns null in case of failure.
+            </summary>
+        </member>
         <member name="M:YoutubeExplode.Playlists.PlaylistId.Equals(YoutubeExplode.Playlists.PlaylistId)">
             <inheritdoc />
         </member>
@@ -456,12 +462,6 @@
             Converts ID to string.
             </summary>
         </member>
-        <member name="M:YoutubeExplode.Playlists.PlaylistId.TryParse(System.String)">
-            <summary>
-            Attempts to parse the specified string as a playlist ID or URL.
-            Returns null in case of failure.
-            </summary>
-        </member>
         <member name="T:YoutubeExplode.Search.SearchClient">
             <summary>
             YouTube search queries.
@@ -471,6 +471,14 @@
             <summary>
             Initializes an instance of <see cref="T:YoutubeExplode.Search.SearchClient"/>.
             </summary>
+        </member>
+        <member name="M:YoutubeExplode.Search.SearchClient.GetVideosAsync(System.String,System.Int32,System.Int32)">
+            <summary>
+            Enumerates videos returned by the specified search query.
+            </summary>
+            <param name="searchQuery">The term to look for.</param>
+            <param name="startPage">Sets how many page should be skipped from the beginning of the search.</param>
+            <param name="pageCount">Limits how many page should be requested to complete the search.</param>
         </member>
         <member name="M:YoutubeExplode.Search.SearchClient.GetVideosAsync(System.String)">
             <summary>
@@ -801,25 +809,6 @@
         <member name="M:YoutubeExplode.Videos.Streams.Container.ToString">
             <inheritdoc />
         </member>
-        <member name="M:YoutubeExplode.Videos.Streams.Container.Equals(YoutubeExplode.Videos.Streams.Container)">
-            <inheritdoc />
-        </member>
-        <member name="M:YoutubeExplode.Videos.Streams.Container.Equals(System.Object)">
-            <inheritdoc />
-        </member>
-        <member name="M:YoutubeExplode.Videos.Streams.Container.GetHashCode">
-            <inheritdoc />
-        </member>
-        <member name="M:YoutubeExplode.Videos.Streams.Container.op_Equality(YoutubeExplode.Videos.Streams.Container,YoutubeExplode.Videos.Streams.Container)">
-            <summary>
-            Equality check.
-            </summary>
-        </member>
-        <member name="M:YoutubeExplode.Videos.Streams.Container.op_Inequality(YoutubeExplode.Videos.Streams.Container,YoutubeExplode.Videos.Streams.Container)">
-            <summary>
-            Equality check.
-            </summary>
-        </member>
         <member name="P:YoutubeExplode.Videos.Streams.Container.Mp4">
             <summary>
             MPEG-4 Part 14 (.mp4).
@@ -838,6 +827,25 @@
         <member name="M:YoutubeExplode.Videos.Streams.Container.Parse(System.String)">
             <summary>
             Parse a container from name.
+            </summary>
+        </member>
+        <member name="M:YoutubeExplode.Videos.Streams.Container.Equals(YoutubeExplode.Videos.Streams.Container)">
+            <inheritdoc />
+        </member>
+        <member name="M:YoutubeExplode.Videos.Streams.Container.Equals(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:YoutubeExplode.Videos.Streams.Container.GetHashCode">
+            <inheritdoc />
+        </member>
+        <member name="M:YoutubeExplode.Videos.Streams.Container.op_Equality(YoutubeExplode.Videos.Streams.Container,YoutubeExplode.Videos.Streams.Container)">
+            <summary>
+            Equality check.
+            </summary>
+        </member>
+        <member name="M:YoutubeExplode.Videos.Streams.Container.op_Inequality(YoutubeExplode.Videos.Streams.Container,YoutubeExplode.Videos.Streams.Container)">
+            <summary>
+            Equality check.
             </summary>
         </member>
         <member name="T:YoutubeExplode.Videos.Streams.FileSize">
@@ -1437,6 +1445,12 @@
         <member name="M:YoutubeExplode.Videos.VideoId.ToString">
             <inheritdoc />
         </member>
+        <member name="M:YoutubeExplode.Videos.VideoId.TryParse(System.String)">
+            <summary>
+            Attempts to parse the specified string as a video ID or URL.
+            Returns null in case of failure.
+            </summary>
+        </member>
         <member name="M:YoutubeExplode.Videos.VideoId.Equals(YoutubeExplode.Videos.VideoId)">
             <inheritdoc />
         </member>
@@ -1464,12 +1478,6 @@
         <member name="M:YoutubeExplode.Videos.VideoId.op_Implicit(YoutubeExplode.Videos.VideoId)~System.String">
             <summary>
             Converts ID to string.
-            </summary>
-        </member>
-        <member name="M:YoutubeExplode.Videos.VideoId.TryParse(System.String)">
-            <summary>
-            Attempts to parse the specified string as a video ID or URL.
-            Returns null in case of failure.
             </summary>
         </member>
         <member name="T:YoutubeExplode.YoutubeClient">
